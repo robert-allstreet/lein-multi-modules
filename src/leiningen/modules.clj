@@ -112,8 +112,9 @@
                           (remove nil?)))]
     (reduce (fn [acc [_ p]] (assoc acc p (deps p))) {} pm)))
 
-(defn topological-sort [deps]
+(defn topological-sort
   "A topological sort of a mapping of graph nodes to their edges (credit Jon Harrop)"
+  [deps]
   (loop [deps deps, resolved #{}, result []]
     (if (empty? deps)
       result
