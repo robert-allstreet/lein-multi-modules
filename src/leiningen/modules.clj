@@ -6,7 +6,8 @@
             [clojure.java.io :as io]
             [clojure.set :as set]
             [clojure.java.shell :as sh]
-            [clojure.string :as s])
+            [clojure.string :as s]
+            [clojure.pprint :as pp])
   (:use [lein-modules.inheritance :only (inherit)]
         [lein-modules.common      :only (parent with-profiles read-project)]
         [lein-modules.compression :only (compressed-profiles)])
@@ -209,7 +210,6 @@
     (doseq [project modules]
       (exec (assoc x :project project)))))
 
-
 (defn run-parallel
   [{:keys [quiet? args subprocess opts project done executor] :as x}]
   (let [modules (->> project progeny interdependence)]
@@ -288,10 +288,12 @@
   Accepts '-q', '--quiet' and ':quiet' to suppress non-subprocess output."
   [project & args]
   (let [[quiet? args] ((juxt some remove) #{"-q" "--quiet" ":quiet"} args)
-        [p args] (loop [p nil out-args [] args args]
+        [p args] (loop [p (+ 2 (.availableProcessors (Runtime/getRuntime))) out-args [] args args] 
                    (if (seq args)
                      (if (= "-p" (first args))
-                       (recur (Integer/parseInt (second args)) out-args (drop 2 args))
+                       (if (> 2 (Integer/parseInt (second args)))
+                         (recur nil out-args (drop 2 args))
+                         (recur (Integer/parseInt (second args)) out-args (drop 2 args)))
                        (recur p (conj out-args (first args)) (rest args)))
                      [p out-args]))
         quiet? (or quiet? (-> project :modules :quiet))
